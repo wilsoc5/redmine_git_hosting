@@ -1,14 +1,15 @@
 class CreateGitCaches < ActiveRecord::Migration
-  def self.up
+  def up
     create_table :git_caches do |t|
-      t.column :command, :text
-      t.column :command_output, :binary
-      t.column :proj_identifier, :string
+      t.string :repo_identifier
+      t.text   :command, :text
+      t.binary :command_output, limit: 16777216
+
       t.timestamps
     end
   end
 
-  def self.down
+  def down
     drop_table :git_caches
   end
 end
