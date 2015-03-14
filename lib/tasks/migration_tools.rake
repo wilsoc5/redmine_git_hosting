@@ -101,10 +101,36 @@ namespace :redmine_git_hosting do
       end
     end
 
+
+    desc "Reset migration numbers"
+    task :reset_migration_numbers => [:environment] do
+      puts
+
+      # Get the old migration name
+      table_name = ActiveRecord::Base.connection.quote_string('schema_migrations')
+      field      = ActiveRecord::Base.connection.quote_string('version')
+
+      puts "Removing old migrations..."
+      query  = "DELETE FROM #{table_name} WHERE #{field} LIKE '%-redmine_git_hosting';"
+      puts query
+      ActiveRecord::Base.connection.execute(query)
+      puts "Done!"
+      puts
+
+      puts "Adding new migrations..."
+      (20150313234501..20150313234511).to_a.each do |migration|
+        version = "#{migration}-redmine_git_hosting"
+        version = ActiveRecord::Base.connection.quote_string(version)
+        query = "INSERT INTO #{table_name} (VERSION) VALUES ('#{version}');"
+        puts query
+        ActiveRecord::Base.connection.execute(query)
+      end
+      puts "Done!"
+    end
   end
 
 
-  desc "Migrate to v1.0 version"
+  desc "Migrate to v1.0.0 version"
   task :migrate_to_v1 => [:environment] do
     ## First step : rename migrations in DB
     task('redmine_git_hosting:migration_tools:fix_migration_numbers').invoke
@@ -115,6 +141,13 @@ namespace :redmine_git_hosting do
     task('redmine_git_hosting:migration_tools:rename_ssh_keys').invoke
     ## Update repositories type
     task('redmine_git_hosting:migration_tools:update_repositories_type').invoke
+  end
+
+
+  desc "Migrate to v1.1.0 version"
+  task :migrate_to_v1_1 => [:environment] do
+    ## First step : reset migrations in DB
+    task('redmine_git_hosting:migration_tools:reset_migration_numbers').invoke
   end
 
 end
