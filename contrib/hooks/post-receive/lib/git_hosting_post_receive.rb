@@ -29,6 +29,7 @@ module GitHosting
 
         opts = {}
         opts[:params] = http_post_data
+        logger.debug("http_post_data: #{http_post_data} ")
 
         http_post(git_config.project_url, opts) do |http, request|
           begin
@@ -44,7 +45,7 @@ module GitHosting
               end
             end
           rescue => e
-            logger.error("HTTP_ERROR : #{e.message}")
+            logger.error("HTTP_ERROR : #{e.message} : #{git_config.project_url}")
           end
         end
 

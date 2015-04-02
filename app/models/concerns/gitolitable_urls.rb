@@ -71,7 +71,8 @@ module GitolitableUrls
 
   ## Unsecure channels (clear password), commit is disabled
   def http_access
-    { url: http_url, committer: 'false' }
+    #{ url: http_url, committer: 'false' }
+    { url: http_url, committer: User.current.allowed_to_commit?(self).to_s }
   end
 
 

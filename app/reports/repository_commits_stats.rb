@@ -130,7 +130,8 @@ class RepositoryCommitsStats
 
 
     def total_changes_by_day
-      @total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order(:commit_date).count
+      #@total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order(:commit_date).count
+      @total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order("#{Changeset.table_name}.commit_date").count
     end
 
 

@@ -70,10 +70,11 @@ module Grack
           end
         when *RedmineGitHosting::GitAccess::PUSH_COMMANDS
           # Push requires valid SSL
-          if !is_ssl?
-            logger.error('SmartHttp : your are trying to push data without SSL!, exiting !')
-            false
-          elsif user
+          #if !is_ssl?
+          #  logger.error('SmartHttp : your are trying to push data without SSL!, exiting !')
+          #  false
+          #elsif user
+          if user
             RedmineGitHosting::GitAccess.new.upload_access_check(user, repository).allowed?
           else
             false

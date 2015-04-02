@@ -4,10 +4,12 @@
   %p= f.text_field :path, required: true, size: 65, label: l(:label_branch_path)
   %p= f.select :permissions, options_for_select(RepositoryProtectedBranche::VALID_PERMS, @protected_branch.permissions), required: true, label: :label_permissions
 
-  = hidden_field_tag "repository_protected_branche[user_list][]", ""
+  -#= hidden_field_tag "repository_protected_branche[user_list][]", ""
+  = hidden_field_tag "repository_protected_branch[user_list][]", ""
 
   %p
-    %label{ for: "repository_protected_branche[user_list]" }= l(:label_user_list) + ' :'
+    -#%label{ for: "repository_protected_branche[user_list]" }= l(:label_user_list) + ' :'
+    %label{ for: "repository_protected_branch[user_list]" }= l(:label_user_list) + ' :'
 
   %ul{ id: 'user_list' }
     - if @protected_branch.user_list.any?
@@ -39,7 +41,8 @@
       placeholderText: '+ add user',
       allowDuplicates: false,
       caseSensitive: false,
-      fieldName: 'repository_protected_branche[' + target + '][]',
+      //fieldName: 'repository_protected_branche[' + target + '][]',
+      fieldName: 'repository_protected_branch[' + target + '][]',
     });
 
   }
