@@ -8,7 +8,7 @@ Redmine::Plugin.register :redmine_git_hosting do
   name 'Redmine Git Hosting Plugin'
   author 'Eric Bishop, Pedro Algarvio, Christian Käser, Zsolt Parragi, Yunsang Choi, Joshua Hogendorn, Jan Schulz-Hofen, John Kubiatowicz, Nicolas Rodriguez and others'
   description 'Enables Redmine to control hosting of Git repositories through Gitolite'
-  version '1.0.2'
+  version '1.0.3'
   url 'https://github.com/jbox-web/redmine_git_hosting'
   author_url 'https://github.com/jbox-web'
 
@@ -36,15 +36,14 @@ Redmine::Plugin.register :redmine_git_hosting do
       :gitolite_temp_dir                     => Rails.root.join('tmp', 'redmine_git_hosting').to_s,
       :gitolite_recycle_bin_expiration_time  => '24.0',
       :gitolite_log_level                    => 'info',
-      :gitolite_log_split                    => 'false',
       :git_config_username                   => 'Redmine Git Hosting',
       :git_config_email                      => 'redmine@example.net',
 
       # Gitolite Hooks Config
-      :gitolite_hooks_are_asynchronous  => 'false',
-      :gitolite_force_hooks_update      => 'true',
-      :gitolite_hooks_debug             => 'false',
-      :gitolite_hooks_url               => 'http://localhost:3000',
+      :gitolite_overwrite_existing_hooks => 'true',
+      :gitolite_hooks_are_asynchronous   => 'false',
+      :gitolite_hooks_debug              => 'false',
+      :gitolite_hooks_url                => 'http://localhost:3000',
 
       # Gitolite Cache Config
       :gitolite_cache_max_time          => '86400',
@@ -87,43 +86,47 @@ Redmine::Plugin.register :redmine_git_hosting do
     }
   })
 
-  project_module :repository do
-    permission :create_repository_mirrors, :repository_mirrors => :create
-    permission :view_repository_mirrors,   :repository_mirrors => :index
-    permission :edit_repository_mirrors,   :repository_mirrors => :edit
+  Redmine::AccessControl.map do |map|
+    map.permission :create_gitolite_ssh_key, gitolite_public_keys: [:index, :create, :destroy], require: :loggedin
 
-    permission :create_repository_post_receive_urls, :repository_post_receive_urls => :create
-    permission :view_repository_post_receive_urls,   :repository_post_receive_urls => :index
-    permission :edit_repository_post_receive_urls,   :repository_post_receive_urls => :edit
+    map.project_module :repository do |map|
+      map.permission :create_repository_mirrors, repository_mirrors: [:new, :create]
+      map.permission :view_repository_mirrors,   repository_mirrors: [:index, :show]
+      map.permission :edit_repository_mirrors,   repository_mirrors: [:edit, :update, :destroy]
+      map.permission :push_repository_mirrors,   repository_mirrors: [:push]
 
-    permission :create_deployment_keys, :repository_deployment_credentials => :create
-    permission :view_deployment_keys,   :repository_deployment_credentials => :index
-    permission :edit_deployment_keys,   :repository_deployment_credentials => :edit
+      map.permission :create_repository_post_receive_urls, repository_post_receive_urls: [:new, :create]
+      map.permission :view_repository_post_receive_urls,   repository_post_receive_urls: [:index, :show]
+      map.permission :edit_repository_post_receive_urls,   repository_post_receive_urls: [:edit, :update, :destroy]
 
-    permission :create_repository_git_config_keys, :repository_git_config_keys => :create
-    permission :view_repository_git_config_keys,   :repository_git_config_keys => :index
-    permission :edit_repository_git_config_keys,   :repository_git_config_keys => :edit
+      map.permission :create_repository_deployment_credentials, repository_deployment_credentials: [:new, :create]
+      map.permission :view_repository_deployment_credentials,   repository_deployment_credentials: [:index, :show]
+      map.permission :edit_repository_deployment_credentials,   repository_deployment_credentials: [:edit, :update, :destroy]
 
-    permission :create_repository_protected_branches, :repository_protected_branches => :create
-    permission :view_repository_protected_branches,   :repository_protected_branches => :index
-    permission :edit_repository_protected_branches,   :repository_protected_branches => :edit
+      map.permission :create_repository_git_config_keys, repository_git_config_keys: [:new, :create]
+      map.permission :view_repository_git_config_keys,   repository_git_config_keys: [:index, :show]
+      map.permission :edit_repository_git_config_keys,   repository_git_config_keys: [:edit, :update, :destroy]
 
-    permission :create_repository_git_notifications, :repository_git_notifications => :create
-    permission :view_repository_git_notifications,   :repository_git_notifications => :index
-    permission :edit_repository_git_notifications,   :repository_git_notifications => :edit
-    permission :receive_git_notifications,           :gitolite_hooks => :post_receive
+      map.permission :create_repository_protected_branches, repository_protected_branches: [:new, :create]
+      map.permission :view_repository_protected_branches,   repository_protected_branches: [:index, :show]
+      map.permission :edit_repository_protected_branches,   repository_protected_branches: [:edit, :update, :destroy]
 
-    permission :create_gitolite_ssh_key,             :my => :account
-    permission :download_git_revision,               :download_git_revision => :index
+      map.permission :create_repository_git_notifications, repository_git_notifications: [:new, :create]
+      map.permission :view_repository_git_notifications,   repository_git_notifications: [:index, :show]
+      map.permission :edit_repository_git_notifications,   repository_git_notifications: [:edit, :update, :destroy]
+
+      map.permission :receive_git_notifications, gitolite_hooks: :post_receive
+      map.permission :download_git_revision,     download_git_revision: :index
+    end
   end
 
   Redmine::MenuManager.map :admin_menu do |menu|
-    menu.push :redmine_git_hosting, { :controller => 'settings', :action => 'plugin', :id => 'redmine_git_hosting' }, :caption => :module_name
+    menu.push :redmine_git_hosting, { controller: 'settings', action: 'plugin', id: 'redmine_git_hosting' }, caption: :module_name
   end
 
   Redmine::MenuManager.map :top_menu do |menu|
-    menu.push :archived_repositories, { :controller => '/archived_repositories', :action => 'index' }, :caption => :label_archived_repositories, :after => :administration,
-              :if => Proc.new { User.current.logged? && User.current.admin? }
+    menu.push :archived_repositories, { controller: '/archived_repositories', action: 'index' }, caption: :label_archived_repositories, after: :administration,
+              if: Proc.new { User.current.logged? && User.current.admin? }
   end
 
   Redmine::Scm::Base.add 'Xitolite'

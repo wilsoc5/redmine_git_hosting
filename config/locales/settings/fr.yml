@@ -50,11 +50,7 @@ fr:
   label_gitolite_recycle_bin_expiration_time_desc: (En heures)
 
   label_gitolite_log_level: Niveau de journalisation
-  label_gitolite_log_split: Séparer les journaux dans plusieurs fichiers
-  label_gitolite_log_split_desc: (Redémarrez Redmine et Sidekiq après les changements)
-  label_gitolite_log_split_on: (Seront stockés dans « rails root/logs/git_hosting/git_*.log »)
-  label_gitolite_log_split_off: (Seront stockés dans « rails root/logs/git_hosting.log »)
-
+  label_gitolite_log_level_desc: (Vous devrez redémarrer Redmine pour que le changement soit pris en compte)
   label_debug: Débogue
   label_info: Info
   label_warn: Avertissement
@@ -86,12 +82,14 @@ fr:
   label_tab_hooks: Hooks
   label_gitolite_hooks_config: Configuration des hooks de Gitolite
 
+  label_gitolite_overwrite_existing_hooks: Ecraser les hooks existants
   label_gitolite_hooks_are_asynchronous: Lancer les hooks de manière asynchrone
-  label_gitolite_force_hooks_update: Forcer la mise à jour des hooks
   label_gitolite_hooks_debug: Lancer les hooks en mode debug
   label_gitolite_hooks_url: URL des hooks
   label_gitolite_hooks_namespace: Espace de nom Git des hooks
   label_default_gitolite_hooks_url: URL par défaut
+  label_install_gitolite_hooks: Installer les hooks !
+  label_gitolite_hook_untouched: hook non mis à jour
 
   # Gitolite Cache Config
   label_tab_cache: Cache
@@ -101,6 +99,7 @@ fr:
   label_gitolite_cache_max_size: Taille maximale d'un élément du cache
   label_gitolite_cache_max_elements: Nombre maximal d'éléments dans le cache
   label_gitolite_cache_adapter: Cache Adapter
+  label_gitolite_cache_adapter_desc: (Vous devrez redémarrer Redmine pour que le changement soit pris en compte)
 
   # Gitolite Notifications
   label_tab_notify: Notifications

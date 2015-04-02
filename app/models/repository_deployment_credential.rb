@@ -1,9 +1,6 @@
 class RepositoryDeploymentCredential < ActiveRecord::Base
   unloadable
 
-  STATUS_ACTIVE   = true
-  STATUS_INACTIVE = false
-
   VALID_PERMS  = ['R', 'RW+']
   DEFAULT_PERM = 'RW+'
 
@@ -32,8 +29,8 @@ class RepositoryDeploymentCredential < ActiveRecord::Base
   validate :owner_matches_key
 
   ## Scopes
-  scope :active,   -> { where active: STATUS_ACTIVE }
-  scope :inactive, -> { where active: STATUS_LOCKED }
+  scope :active,   -> { where(active: true) }
+  scope :inactive, -> { where(active: false) }
 
 
   def to_s
@@ -43,7 +40,7 @@ class RepositoryDeploymentCredential < ActiveRecord::Base
 
   # Deployment Credentials ignored unless created by someone who still has permission to create them
   def honored?
-    user.admin? || user.allowed_to?(:create_deployment_keys, repository.project)
+    user.admin? || user.allowed_to?(:create_repository_deployment_credentials, repository.project)
   end
 
 

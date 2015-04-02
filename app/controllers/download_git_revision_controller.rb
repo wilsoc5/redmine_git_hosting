@@ -7,7 +7,7 @@ class DownloadGitRevisionController < ApplicationController
   before_filter :set_download
   before_filter :validate_download
 
-  helper :git_hosting
+  helper :redmine_bootstrap_kit
 
 
   def index
@@ -56,7 +56,7 @@ class DownloadGitRevisionController < ApplicationController
 
 
     def validate_download
-      if !@download.commit_valid
+      if !@download.valid_commit?
         flash.now[:error] = l(:error_download_revision_no_such_commit, commit: download_revision)
         render_404
       end

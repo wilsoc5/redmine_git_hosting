@@ -7,22 +7,18 @@ class RepositoryContributorsStats
 
   def initialize(repository)
     @repository = repository
+    @changes_for_committer = {}
   end
 
 
   def commits_per_author
     data = []
-    committers = commits_per_author_with_aliases
 
-    # sort by commits (descending)
-    committers.sort! { |x, y| y[:commits] <=> x[:commits] }
-
-    committers.each do |committer_hash|
+    sorted_commits_per_author_with_aliases.each do |committer_hash|
       commits = {}
 
       committer_hash[:committers].each do |committer|
-        c = Changeset.where('repository_id = ? AND committer = ?', repository.id, committer).group(:commit_date).order(:commit_date).count
-        commits = commits.merge(c) { |key, oldval, newval| newval + oldval }
+        commits = commits.merge(count_changes_for_committer(committer)) { |key, oldval, newval| newval + oldval }
       end
 
       commits = Hash[commits.sort]
@@ -64,14 +60,25 @@ class RepositoryContributorsStats
     end
 
 
+    # generate mappings from the registered users to the comitters
+    # user_committer_mapping = { name => [comitter, ...] }
+    # registered_committers = [ committer,... ]
+    #
     def commits_per_author_with_aliases
-      # generate mappings from the registered users to the comitters
-      # user_committer_mapping = { name => [comitter, ...] }
-      # registered_committers = [ committer,... ]
+      return @commits_per_author_with_aliases if !@commits_per_author_with_aliases.nil?
+      @commits_per_author_with_aliases = nil
+
       registered_committers = []
       user_committer_mapping = {}
+#<<<<<<< HEAD
       # Changeset.where(repository_id: repository.id).where('user_id IS NOT NULL').group(:committer).includes(:user).each do |x|
-      Changeset.where(repository_id: repository.id).where('user_id IS NOT NULL').group(:committer,"id").includes(:user).each do |x|
+      #Changeset.where(repository_id: repository.id).where('user_id IS NOT NULL').group(:committer,"id").includes(:user).each do |x|
+#=======
+      Changeset.select('changesets.committer, changesets.user_id')
+               .where('repository_id = ? and user_id IS NOT NULL', repository.id)
+               .group(:committer, :user_id)
+               .includes(:user).each do |x|
+#>>>>>>> 1.0.3
         name = "#{x.user.firstname} #{x.user.lastname}"
         registered_committers << x.committer
         user_committer_mapping[[name, x.user.mail]] ||= []
@@ -101,7 +108,20 @@ class RepositoryContributorsStats
       merged.sort! { |x, y| x[:name] <=> y[:name] }
 
       # merged = merged + [{name:"",commits:0,changes:0}]*(10 - merged.length) if merged.length < 10
-      return merged
+      @commits_per_author_with_aliases = merged
+      @commits_per_author_with_aliases
+    end
+
+
+    def sorted_commits_per_author_with_aliases
+      @committers ||= commits_per_author_with_aliases.sort! { |x, y| y[:commits] <=> x[:commits] }
+    end
+
+
+    def count_changes_for_committer(committer)
+      return @changes_for_committer[committer] if !@changes_for_committer[committer].nil?
+      @changes_for_committer[committer] ||= Changeset.where('repository_id = ? AND committer = ?', repository.id, committer).group(:commit_date).order(:commit_date).count
+      @changes_for_committer[committer]
     end
 
 end

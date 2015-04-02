@@ -130,8 +130,20 @@ class RepositoryCommitsStats
 
 
     def total_changes_by_day
+#<<<<<<< HEAD
       #@total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order(:commit_date).count
-      @total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order("#{Changeset.table_name}.commit_date").count
+      #@total_changes_by_day ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:commit_date).order("#{Changeset.table_name}.commit_date").count
+#=======
+      return @total_changes_by_day if !@total_changes_by_day.nil?
+      @total_changes_by_day = nil
+      changes = {}
+      Changeset.where("repository_id = ?", repository.id).includes(:filechanges).order(:commit_date).each do |changeset|
+        changes[changeset.commit_date] = 0 if !changes.has_key?(changeset.commit_date)
+        changes[changeset.commit_date] += changeset.filechanges.size
+      end
+      @total_changes_by_day = changes
+      @total_changes_by_day
+#>>>>>>> 1.0.3
     end
 
 

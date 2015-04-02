@@ -10,7 +10,7 @@ en:
               blank_default_exists: "Can not create the respository as a blank repository already exists."
               invalid_options: "You can not initialize a README file in a repository with GitAnnex"
             identifier:
-              cannot_equal_project: "can not match the ID of an existing project" 
+              cannot_equal_project: "can not match the ID of an existing project"
               taken: "is already taken."
               invalid: invalid
               cannot_change: cannot change

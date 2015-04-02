@@ -32,6 +32,7 @@ namespace :redmine_git_hosting do
   task :fetch_changesets => [:environment] do
     puts "Performing manual fetch_changesets operation..."
     RedmineGitHosting.logger.warn("Performing manual fetch_changesets operation from command line")
+    GitoliteAccessor.flush_git_cache
     Repository.fetch_changesets
     RedmineGitHosting.logger.warn("Done!")
     puts "Done!"
@@ -60,7 +61,7 @@ namespace :redmine_git_hosting do
     puts "Installing/updating Gitolite hooks"
     puts "----------------------------------"
     puts "Results :"
-    result = RedmineGitHosting::Config.check_hooks_install!
+    result = RedmineGitHosting::Config.install_hooks!
     puts YAML::dump(result)
     puts "Done!"
   end
@@ -70,7 +71,7 @@ namespace :redmine_git_hosting do
   task :install_hook_parameters => [:environment] do
     puts ""
     puts "Installing/updating Gitolite hook parameters"
-    puts "----------------------------------"
+    puts "--------------------------------------------"
     puts "Results :"
     result = RedmineGitHosting::Config.update_hook_params!
     puts YAML::dump(result)

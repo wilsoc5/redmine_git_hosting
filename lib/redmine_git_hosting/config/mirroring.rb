@@ -20,13 +20,12 @@ module RedmineGitHosting::Config
     module ClassMethods
 
       def mirroring_public_key
-        @mirroring_public_key ||=
-          begin
-            format_mirror_key(gitolite_ssh_public_key_content)
-          rescue => e
-            logger.error("Error while loading mirroring public key : #{e.output}")
-            nil
-          end
+        begin
+          format_mirror_key(gitolite_ssh_public_key_content)
+        rescue => e
+          logger.error("Error while loading mirroring public key : #{e.output}")
+          nil
+        end
       end
 
 
@@ -60,11 +59,15 @@ module RedmineGitHosting::Config
 
         def gitolite_ssh_public_key_content
           File.read(gitolite_ssh_public_key)
+        rescue => e
+          nil
         end
 
 
         def gitolite_ssh_private_key_content
           File.read(gitolite_ssh_private_key)
+        rescue => e
+          nil
         end
 
 
@@ -80,24 +83,24 @@ module RedmineGitHosting::Config
 
         def install_private_key
           RedmineGitHosting::Commands.sudo_install_file(gitolite_ssh_private_key_content, gitolite_ssh_private_key_dest_path, '600')
-        rescue
-          logger.error('Failed to install Redmine Git Hosting mirroring SSH private key !')
+        rescue RedmineGitHosting::Error::GitoliteCommandException => e
+          logger.error("Failed to install Redmine Git Hosting mirroring SSH private key : #{e.output}")
           false
         end
 
 
         def install_public_key
           RedmineGitHosting::Commands.sudo_install_file(gitolite_ssh_public_key_content, gitolite_ssh_public_key_dest_path, '644')
-        rescue
-          logger.error('Failed to install Redmine Git Hosting mirroring SSH public key !')
+        rescue RedmineGitHosting::Error::GitoliteCommandException => e
+          logger.error("Failed to install Redmine Git Hosting mirroring SSH public key : #{e.output}")
           false
         end
 
 
         def install_mirroring_script
           RedmineGitHosting::Commands.sudo_install_file(mirroring_script_content, gitolite_mirroring_script, '700')
-        rescue
-          logger.error('Failed to install Redmine Git Hosting mirroring script !')
+        rescue RedmineGitHosting::Error::GitoliteCommandException => e
+          logger.error("Failed to install Redmine Git Hosting mirroring script : #{e.output}")
           false
         end
 

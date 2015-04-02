@@ -127,8 +127,8 @@ describe Repository::Xitolite do
 
       context "with all options" do
         my_hash = {
-          ssh:   { url: "ssh://#{GIT_USER}@localhost/redmine/project-parent/project-child.git",     committer: 'false' },
-          https: { url: "https://redmine-test-user@localhost/git/project-parent/project-child.git", committer: 'false' },
+          ssh:   { url: "ssh://#{GIT_USER}@localhost/redmine/project-parent/project-child.git",     committer: 'true' },
+          https: { url: "https://redmine-test-user@localhost/git/project-parent/project-child.git", committer: 'true' },
           http:  { url: "http://redmine-test-user@localhost/git/project-parent/project-child.git",  committer: 'false' },
           go:    { url: "localhost/go/project-parent/project-child",                                committer: 'false' },
           git:   { url: "git://localhost/redmine/project-parent/project-child.git",                 committer: 'false' }
@@ -157,7 +157,7 @@ describe Repository::Xitolite do
       end
 
       context "with ssh" do
-        my_hash = { ssh: { url: "ssh://#{GIT_USER}@localhost/redmine/project-parent/project-child.git", committer: 'false' } }
+        my_hash = { ssh: { url: "ssh://#{GIT_USER}@localhost/redmine/project-parent/project-child.git", committer: 'true' } }
 
         it "should return a Hash of Git url" do
           @user = create_user_with_permissions(@project_child)
@@ -278,32 +278,32 @@ describe Repository::Xitolite do
   end
 
 
-  ##############################
-  #                            #
-  #  UNIQUE REPOSITORIES TESTS #
-  #                            #
-  ##############################
+  ##################################
+  #                                #
+  #  NON-UNIQUE REPOSITORIES TESTS #
+  #                                #
+  ##################################
 
 
-  def build_collection_of_unique_repositories
+  def build_collection_of_non_unique_repositories
     @repository_1 = build_git_repository(project: @project_child, is_default: true)
     @repository_1.valid?
-    @repository_2 = build_git_repository(project: @project_child, identifier: 'repo1-test')
+    @repository_2 = build_git_repository(project: @project_child, identifier: 'repo-test')
     @repository_2.valid?
 
     @repository_3 = build_git_repository(project: @project_parent, is_default: true)
     @repository_3.valid?
-    @repository_4 = build_git_repository(project: @project_parent, identifier: 'repo2-test')
+    @repository_4 = build_git_repository(project: @project_parent, identifier: 'repo-test')
     @repository_4.valid?
   end
 
 
-  def create_collection_of_unique_repositories
+  def create_collection_of_non_unique_repositories
     @repository_1 = create_git_repository(project: @project_child, is_default: true)
-    @repository_2 = create_git_repository(project: @project_child, identifier: 'repo1-test')
+    @repository_2 = create_git_repository(project: @project_child, identifier: 'repo-test')
 
     @repository_3 = create_git_repository(project: @project_parent, is_default: true)
-    @repository_4 = create_git_repository(project: @project_parent, identifier: 'repo2-test')
+    @repository_4 = create_git_repository(project: @project_parent, identifier: 'repo-test')
   end
 
 
@@ -665,32 +665,32 @@ describe Repository::Xitolite do
   end
 
 
-  ##################################
-  #                                #
-  #  NON-UNIQUE REPOSITORIES TESTS #
-  #                                #
-  ##################################
+  ##############################
+  #                            #
+  #  UNIQUE REPOSITORIES TESTS #
+  #                            #
+  ##############################
 
 
-  def build_collection_of_non_unique_repositories
+  def build_collection_of_unique_repositories
     @repository_1 = build_git_repository(project: @project_child, is_default: true)
     @repository_1.valid?
-    @repository_2 = build_git_repository(project: @project_child, identifier: 'repo-test')
+    @repository_2 = build_git_repository(project: @project_child, identifier: 'repo1-test')
     @repository_2.valid?
 
     @repository_3 = build_git_repository(project: @project_parent, is_default: true)
     @repository_3.valid?
-    @repository_4 = build_git_repository(project: @project_parent, identifier: 'repo-test')
+    @repository_4 = build_git_repository(project: @project_parent, identifier: 'repo2-test')
     @repository_4.valid?
   end
 
 
-  def create_collection_of_non_unique_repositories
+  def create_collection_of_unique_repositories
     @repository_1 = create_git_repository(project: @project_child, is_default: true)
-    @repository_2 = create_git_repository(project: @project_child, identifier: 'repo-test')
+    @repository_2 = create_git_repository(project: @project_child, identifier: 'repo1-test')
 
     @repository_3 = create_git_repository(project: @project_parent, is_default: true)
-    @repository_4 = create_git_repository(project: @project_parent, identifier: 'repo-test')
+    @repository_4 = create_git_repository(project: @project_parent, identifier: 'repo2-test')
   end
 
 
