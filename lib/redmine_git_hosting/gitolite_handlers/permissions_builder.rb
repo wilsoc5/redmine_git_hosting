@@ -22,11 +22,13 @@ module RedmineGitHosting
         @rewind     = []
         @write      = []
         @read       = []
+	@negate     = []
 
         @permissions        = {}
         @permissions['RW+'] = {}
         @permissions['RW']  = {}
         @permissions['R']   = {}
+        @permissions['-']   = {}
         @old_permissions    = old_permissions
       end
 
