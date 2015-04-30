@@ -5,7 +5,7 @@ module RedmineGitHosting
     class DisplayRepositoryReadme < Redmine::Hook::ViewListener
       unloadable
 
-      MARKDOWN_EXT = %w(.txt)
+      MARKDOWN_EXT = %w(.txt .md)
 
       def view_repositories_show_bottom(context)
         path        = get_path(context)
