@@ -6,6 +6,7 @@ module RedmineGitHosting
 
       def self.included(base)
         base.send(:include, InstanceMethods)
+        base.send(:include, RedmineGitHosting::GitoliteAccessor::Methods)
         base.class_eval do
           unloadable
 
@@ -86,11 +87,11 @@ module RedmineGitHosting
                 when 'create'
                   # Call UseCase object that will complete Repository creation :
                   # it will create GitExtra association and then the repository in Gitolite.
-                  CreateRepository.new(@repository, creation_options).call
+                  Repositories::Create.call(@repository, creation_options)
                 when 'update'
-                  GitoliteAccessor.update_repository(@repository)
+                  gitolite_accessor.update_repository(@repository)
                 when 'destroy'
-                  GitoliteAccessor.destroy_repository(@repository)
+                  gitolite_accessor.destroy_repository(@repository)
                 end
               end
             end
@@ -130,9 +131,7 @@ module RedmineGitHosting
             @rev_to = params[:rev_to]
 
             unless @rev.to_s.match(REV_PARAM_RE) && @rev_to.to_s.match(REV_PARAM_RE)
-              if @repository.branches.blank?
-                raise InvalidRevisionParam
-              end
+              raise InvalidRevisionParam if @repository.branches.empty?
             end
           rescue ActiveRecord::RecordNotFound
             render_404

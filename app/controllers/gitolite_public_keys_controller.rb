@@ -1,6 +1,8 @@
 class GitolitePublicKeysController < ApplicationController
   unloadable
 
+  include RedmineGitHosting::GitoliteAccessor::Methods
+
   before_filter :require_login
   before_filter :find_user
   before_filter :find_gitolite_public_key, only: [:destroy]
@@ -12,7 +14,6 @@ class GitolitePublicKeysController < ApplicationController
   def index
     @gitolite_user_keys   = @user.gitolite_public_keys.user_key.order('title ASC, created_at ASC')
     @gitolite_deploy_keys = @user.gitolite_public_keys.deploy_key.order('title ASC, created_at ASC')
-    @gitolite_public_key  = GitolitePublicKey.new
   end
 
 
@@ -89,12 +90,12 @@ class GitolitePublicKeysController < ApplicationController
 
 
     def create_ssh_key(ssh_key)
-      GitoliteAccessor.create_ssh_key(ssh_key)
+      gitolite_accessor.create_ssh_key(ssh_key)
     end
 
 
     def destroy_ssh_key(ssh_key)
-      GitoliteAccessor.destroy_ssh_key(ssh_key)
+      gitolite_accessor.destroy_ssh_key(ssh_key)
     end
 
 end

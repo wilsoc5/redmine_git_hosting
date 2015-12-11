@@ -10,7 +10,13 @@ resources :repositories, only: [] do
     get 'download_revision', to: 'download_git_revision#index', as: 'download_git_revision'
   end
 
-  resource  :git_extras,        controller: 'repository_git_extras', only: [:update]
+  resource  :git_extras, controller: 'repository_git_extras', only: [:update] do
+    match 'sort_urls', via: [:get, :post]
+    member do
+      match 'move', via: [:get, :post]
+    end
+  end
+
   resource  :git_notifications, controller: 'repository_git_notifications'
 
   resources :post_receive_urls,      controller: 'repository_post_receive_urls'
@@ -30,13 +36,14 @@ end
 # Enable Redirector for Go Lang repositories
 get 'go/:repo_path', repo_path: /([^\/]+\/)*?[^\/]+/, to: 'go_redirector#index'
 
-get '/settings/plugin/:id/install_gitolite_hooks', to: 'settings#install_gitolite_hooks', as: 'install_gitolite_hooks'
+get 'settings/plugin/:id/authors', to: 'settings#authors', as: 'plugin_authors'
+get 'settings/plugin/:id/install_gitolite_hooks', to: 'settings#install_gitolite_hooks', as: 'install_gitolite_hooks'
 
 # Enable SmartHTTP Grack support
 mount Grack::Bundle.new({}), at: '/', constraints: lambda { |request| /[-\/\w\.]+\.git\//.match(request.path_info) }, via: [:get, :post]
 
 # Post Receive Hooks
-match 'githooks/post-receive/:type/:projectid', to: 'gitolite_hooks#post_receive', via: [:post]
+mount Hrack::Bundle.new({}), at: 'githooks/post-receive/:type/:projectid', via: [:post]
 
 # Archived Repositories
 get 'archived_projects/index',                                                to: 'archived_repositories#index'

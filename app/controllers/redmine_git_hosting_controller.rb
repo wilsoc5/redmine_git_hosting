@@ -1,8 +1,10 @@
 class RedmineGitHostingController < ApplicationController
   unloadable
 
+  include XitoliteRepositoryFinder
+
   before_filter :require_login
-  before_filter :set_repository
+  before_filter :find_xitolite_repository
   before_filter :check_required_permissions
   before_filter :set_current_tab
 
@@ -25,38 +27,15 @@ class RedmineGitHostingController < ApplicationController
   private
 
 
-    def set_repository
-      begin
-        @repository = Repository::Xitolite.find(params[:repository_id])
-      rescue ActiveRecord::RecordNotFound => e
-        render_404
-      else
-        @project = @repository.project
-        render_404 if @project.nil?
-      end
+    def find_repository_param
+      params[:repository_id]
     end
 
 
     def check_required_permissions
-      # Deny access if the current user is not allowed to manage the project's repository
-      if !@project.module_enabled?(:repository)
-        render_403
-      end
-
+      return render_403 if !@project.module_enabled?(:repository)
       return true if User.current.admin?
-
-      not_enough_perms = true
-
-      User.current.roles_for_project(@project).each do |role|
-        if role.allowed_to?(:manage_repository)
-          not_enough_perms = false
-          break
-        end
-      end
-
-      if not_enough_perms
-        render_403
-      end
+      return render_403 unless User.current.allowed_to_manage_repository?(@repository)
     end
 
 
@@ -95,9 +74,9 @@ class RedmineGitHostingController < ApplicationController
     end
 
 
-    def call_use_case_and_redirect
+    def call_use_case_and_redirect(opts = {})
       # Update Gitolite repository
-      call_use_case
+      call_use_case(opts)
       render_js_redirect
     end
 

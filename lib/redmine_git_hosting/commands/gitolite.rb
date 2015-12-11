@@ -1,21 +1,14 @@
-module RedmineGitHosting::Commands
+module RedmineGitHosting
+  module Commands
+    module Gitolite
+      extend self
 
-  module Gitolite
+      #################################
+      #                               #
+      #  Sudo+Gitolite Shell Wrapper  #
+      #                               #
+      #################################
 
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    #################################
-    #                               #
-    #  Sudo+Gitolite Shell Wrapper  #
-    #                               #
-    #################################
-
-    module ClassMethods
 
       def gitolite_infos
         ssh_capture('info')
@@ -48,11 +41,7 @@ module RedmineGitHosting::Commands
       def sudo_repository_empty?(repo_path)
         repo_path = File.join(gitolite_home_dir, repo_path, 'objects')
         count = sudo_git_objects_count(repo_path)
-        if count.to_i == 0
-          true
-        else
-          false
-        end
+        count.to_i == 0
       end
 
 
@@ -65,8 +54,19 @@ module RedmineGitHosting::Commands
         end
       end
 
+
+      private
+
+
+        def gitolite_command
+          RedmineGitHosting::Config.gitolite_command
+        end
+
+
+        def gitolite_home_dir
+          RedmineGitHosting::Config.gitolite_home_dir
+        end
+
     end
-
   end
-
 end

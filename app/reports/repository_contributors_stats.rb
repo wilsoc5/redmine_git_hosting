@@ -1,12 +1,8 @@
-class RepositoryContributorsStats
-
-  include Redmine::I18n
-
-  attr_reader :repository
-
+class RepositoryContributorsStats < ReportBase
+  unloadable
 
   def initialize(repository)
-    @repository = repository
+    super
     @changes_for_committer = {}
   end
 
@@ -28,11 +24,11 @@ class RepositoryContributorsStats
       commits_data[:total_commits] = committer_hash[:commits]
       commits_data[:categories]    = commits.keys
       commits_data[:series]        = []
-      commits_data[:series].push({ name: l(:label_commit_plural), data: commits.values })
+      commits_data[:series] << { name: l(:label_commit_plural), data: commits.values }
       data.push(commits_data)
     end
 
-    return data
+    data
   end
 
 
@@ -41,8 +37,8 @@ class RepositoryContributorsStats
     data = {}
     data[:categories] = merged.map { |x| x[:name] }
     data[:series] = []
-    data[:series].push({ name: l(:label_commit_plural), data: merged.map { |x| x[:commits] }})
-    data[:series].push({ name: l(:label_change_plural), data: merged.map { |x| x[:changes] }})
+    data[:series] << { name: l(:label_commit_plural), data: merged.map { |x| x[:commits] } }
+    data[:series] << { name: l(:label_change_plural), data: merged.map { |x| x[:changes] } }
     data
   end
 
@@ -50,17 +46,7 @@ class RepositoryContributorsStats
   private
 
 
-    def commits_by_author
-      @commits_by_author ||= Changeset.where('repository_id = ?', repository.id).group(:committer).count
-    end
-
-
-    def changes_by_author
-      @changes_by_author ||= Change.joins(:changeset).where("#{Changeset.table_name}.repository_id = ?", repository.id).group(:committer).count
-    end
-
-
-    # generate mappings from the registered users to the comitters
+    # Generate mappings from the registered users to the comitters
     # user_committer_mapping = { name => [comitter, ...] }
     # registered_committers = [ committer,... ]
     #

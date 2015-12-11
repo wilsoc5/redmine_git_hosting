@@ -31,19 +31,9 @@ module GitHosting
         opts[:params] = http_post_data
         logger.debug("http_post_data: #{http_post_data} ")
 
-        http_post(git_config.project_url, opts) do |http, request|
+        http_post(git_config.project_url, { params: http_post_data }) do |http, request|
           begin
-            http.request(request) do |response|
-              if response.code.to_i == 200
-                response.read_body do |body_frag|
-                  body_frag.split("\n").each do |line|
-                    logger.info(line)
-                  end
-                end
-              else
-                logger.error("  - Error while notifying Redmine ! (status code: #{response.code})")
-              end
-            end
+            http.request(request) { |response| check_response(response) }
           rescue => e
             logger.error("HTTP_ERROR : #{e.message} : #{git_config.project_url}")
           end
@@ -62,9 +52,20 @@ module GitHosting
         parsed = []
         refs.split("\n").each do |line|
           r = line.chomp.strip.split
-          parsed << [ r[0].to_s, r[1].to_s, r[2].to_s ].join(',')
+          parsed << [r[0].to_s, r[1].to_s, r[2].to_s].join(',')
         end
         parsed
+      end
+
+
+      def check_response(response)
+        if response.code.to_i == 200
+          response.read_body do |body_frag|
+            body_frag.split("\n").each { |line| logger.info(line) }
+          end
+        else
+          logger.error("  - Error while notifying Redmine ! (status code: #{response.code})")
+        end
       end
 
 

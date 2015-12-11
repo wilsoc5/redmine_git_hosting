@@ -8,7 +8,7 @@ module RedmineGitHosting::Plugins::Extenders
 
     def initialize(*args)
       super
-      @create_readme_file = options.delete(:create_readme_file){ false }
+      @create_readme_file = options.delete(:create_readme_file) { false }
     end
 
 
@@ -16,7 +16,7 @@ module RedmineGitHosting::Plugins::Extenders
       if repository_empty?
         do_create_readme_file
       else
-        logger.warn("Repository not empty, cannot create README file in path '#{gitolite_repo_path}'")
+        logger.warn("Repository is not empty, cannot create README file in path '#{gitolite_repo_path}'")
       end if installable?
     end
 
@@ -35,7 +35,7 @@ module RedmineGitHosting::Plugins::Extenders
 
 
       def do_create_readme_file
-        logger.info("Create README file for repository '#{gitolite_repo_name}'")
+        logger.info("Creating README file for repository '#{gitolite_repo_name}'")
         temp_dir = Dir.mktmpdir
 
         begin
@@ -88,7 +88,7 @@ module RedmineGitHosting::Plugins::Extenders
 
 
       def push_commit(repo)
-        repo.push('origin', [ remote_branch ], credentials: credentials)
+        repo.push('origin', [remote_branch], credentials: credentials)
       end
 
 
@@ -99,9 +99,9 @@ module RedmineGitHosting::Plugins::Extenders
 
       def credentials
         Rugged::Credentials::SshKey.new(
-          :username   => RedmineGitHosting::Config.gitolite_user,
-          :publickey  => RedmineGitHosting::Config.gitolite_ssh_public_key,
-          :privatekey => RedmineGitHosting::Config.gitolite_ssh_private_key
+          username:   RedmineGitHosting::Config.gitolite_user,
+          publickey:  RedmineGitHosting::Config.gitolite_ssh_public_key,
+          privatekey: RedmineGitHosting::Config.gitolite_ssh_private_key
         )
       end
 

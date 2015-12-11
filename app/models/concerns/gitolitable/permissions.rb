@@ -2,83 +2,65 @@ module Gitolitable
   module Permissions
     extend ActiveSupport::Concern
 
-    # These are for repository Gitolite configuration
-
-    def git_daemon_available?
-      User.anonymous.allowed_to?(:view_changesets, project) && git_daemon_enabled?
+    def build_gitolite_permissions(old_perms = {})
+      permissions_builder.build(self, gitolite_users, old_perms)
     end
 
 
-    def git_web_available?
-      User.anonymous.allowed_to?(:browse_repository, project) && smart_http_enabled?
+    # We assume here that ':gitolite_config_file' is different than 'gitolite.conf'
+    # like 'redmine.conf' with 'include "redmine.conf"' in 'gitolite.conf'.
+    # This way, we know that all repos in this file are managed by Redmine so we
+    # don't need to backup users
+    #
+    def backup_gitolite_permissions(current_permissions)
+      if protected_branches_available? || RedmineGitHosting::Config.gitolite_identifier_prefix == ''
+        {}
+      else
+        extract_permissions(current_permissions)
+      end
     end
 
 
-    def protected_branches_available?
-      protected_branches_enabled? && project.active? && protected_branches.any?
-    end
+    private
 
 
-    def clonable_via_http?
-      User.anonymous.allowed_to?(:view_changesets, project) || smart_http_enabled?
-    end
+      def permissions_builder
+        if protected_branches_available?
+          PermissionsBuilder::ProtectedBranches
+        else
+          PermissionsBuilder::Standard
+        end
+      end
 
 
-    def pushable_via_http?
-      https_access_enabled?
-    end
+      SKIP_USERS = ['gitweb', 'daemon', 'DUMMY_REDMINE_KEY', 'REDMINE_ARCHIVED_PROJECT', 'REDMINE_CLOSED_PROJECT']
 
 
-    def git_notification_available?
-      git_notification_enabled? && !mailing_list.empty?
-    end
+      def extract_permissions(current_permissions)
+        old_permissions = {}
 
+        current_permissions.each do |perm, branch_settings|
+          old_permissions[perm] = {}
 
-    # These are for repository URLs
+          branch_settings.each do |branch, user_list|
+            next if user_list.empty?
 
-    def urls_are_viewable?
-      RedmineGitHosting::Config.show_repositories_url? && User.current.allowed_to?(:view_changesets, project)
-    end
+            new_user_list = []
 
+            user_list.each do |user|
+              # ignore these users
+              next if SKIP_USERS.include?(user)
 
-    def ssh_access_available?
-      User.current.allowed_to_commit?(self) && !git_annex_enabled?
-    end
+              # backup users that are not Redmine users
+              new_user_list.push(user) if !user.include?(RedmineGitHosting::Config.gitolite_identifier_prefix)
+            end
 
+            old_permissions[perm][branch] = new_user_list if new_user_list.any?
+          end
+        end
 
-    def https_access_available?
-      https_access_enabled?
-    end
-
-
-    def http_access_available?
-      http_access_enabled?
-    end
-
-
-    def git_access_available?
-      (public_project? || public_repo?) && git_daemon_enabled?
-    end
-
-
-    def go_access_available?
-      (public_project? || public_repo?) && smart_http_enabled?
-    end
-
-
-    def git_annex_access_available?
-      git_annex_enabled?
-    end
-
-
-    def downloadable?
-      git_annex_enabled? ? false : User.current.allowed_to_download?(self)
-    end
-
-
-    def deletable?
-      RedmineGitHosting::Config.delete_git_repositories?
-    end
+        old_permissions
+      end
 
   end
 end

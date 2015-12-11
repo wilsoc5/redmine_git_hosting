@@ -10,7 +10,7 @@
 
 .git_hosting_access_box
 
-  %h3= l(:label_current_access_patterns)
+  %h3= l(:label_repos_current_access_patterns)
 
   %span= raw l(:display_access_setup1)
   %br
@@ -54,7 +54,7 @@
 
     %label= l(:label_ssh_access) + ' :'
     - gitSHP = ssh_server_domain.match(/:\d+$/)
-    <%= raw "#{gitSHP ? 'ssh://' : ''}#{gitolite_user}@#{ssh_server_domain}#{gitSHP ? '/' : ':'}#{gitolite_redmine_storage_dir}<em>#{hierarchical_organisation ? 'project1/project2/project3/' : ''}example.git</em>" %>
+    = raw "#{gitSHP ? 'ssh://' : ''}#{gitolite_user}@#{ssh_server_domain}#{gitSHP ? '/' : ':'}#{gitolite_redmine_storage_dir}<em>#{hierarchical_organisation ? 'project1/project2/project3/' : ''}example.git</em>"
 
     %br
 

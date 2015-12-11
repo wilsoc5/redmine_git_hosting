@@ -6,8 +6,6 @@ class GitolitePublicKey < ActiveRecord::Base
   KEY_TYPE_USER   = 0
   KEY_TYPE_DEPLOY = 1
 
-  DEPLOY_PSEUDO_USER = 'deploy_key'
-
   ## Attributes
   attr_accessible :title, :key, :key_type, :delete_when_unused
 
@@ -28,6 +26,7 @@ class GitolitePublicKey < ActiveRecord::Base
 
   validate :has_not_been_changed
   validate :key_correctness
+  validate :key_not_admin
   validate :key_uniqueness
 
   ## Scopes
@@ -90,12 +89,12 @@ class GitolitePublicKey < ActiveRecord::Base
 
   # Make sure that current identifier is consistent with current user login.
   # This method explicitly overrides the static nature of the identifier
-  def reset_identifiers
+  def reset_identifiers(opts = {})
     # Fix identifier
     self.identifier = nil
     self.fingerprint = nil
 
-    set_identifier
+    self.identifier = GitolitePublicKeys::GenerateIdentifier.call(self, user, opts)
     set_fingerprint
 
     # Need to override the "never change identifier" constraint
@@ -124,6 +123,21 @@ class GitolitePublicKey < ActiveRecord::Base
   end
 
 
+  def type
+    key.split(' ')[0]
+  end
+
+
+  def blob
+    key.split(' ')[1]
+  end
+
+
+  def email
+    key.split(' ')[2]
+  end
+
+
   private
 
 
@@ -142,7 +156,7 @@ class GitolitePublicKey < ActiveRecord::Base
     #
     def remove_control_characters
       return if !new_record?
-      self.key = RedmineGitHosting::Utils.sanitize_ssh_key(key)
+      self.key = RedmineGitHosting::Utils::Ssh.sanitize_ssh_key(key)
     end
 
 
@@ -153,49 +167,13 @@ class GitolitePublicKey < ActiveRecord::Base
     #
     def set_identifier
       return nil if user_id.nil?
-      if user_key?
-        set_identifier_for_user_key
-      elsif deploy_key?
-        set_identifier_for_deploy_key
-      end
-    end
-
-
-    def set_identifier_for_user_key
-      tag = self.title.gsub(/[^0-9a-zA-Z]/, '_')
-      self.identifier ||= [ user.gitolite_identifier, '@', 'redmine_', tag ].join
-    end
-
-
-    def set_identifier_for_deploy_key
-      self.identifier ||= deploy_key_identifier
-    end
-
-
-    # Fix https://github.com/jbox-web/redmine_git_hosting/issues/288
-    # Getting user deployment keys count is not sufficient to assure uniqueness of
-    # deployment key identifier. So we need an 'external' counter to increment the global count
-    # while a key with this identifier exists.
-    #
-    def deploy_key_identifier
-      count = 0
-      begin
-        key_id = generate_deploy_key_identifier(count)
-        count += 1
-      end while user.gitolite_public_keys.deploy_key.map(&:owner).include?(key_id.split('@')[0])
-      key_id
-    end
-
-
-    def generate_deploy_key_identifier(count)
-      key_count = user.gitolite_public_keys.deploy_key.length + 1 + count
-      [ user.gitolite_identifier, '_', DEPLOY_PSEUDO_USER, '_', key_count, '@', 'redmine_', DEPLOY_PSEUDO_USER, '_', key_count ].join
+      self.identifier ||= GitolitePublicKeys::GenerateIdentifier.call(self, user)
     end
 
 
     def set_fingerprint
       begin
-        self.fingerprint = RedmineGitHosting::Utils.ssh_fingerprint(key)
+        self.fingerprint = RedmineGitHosting::Utils::Ssh.ssh_fingerprint(key)
       rescue RedmineGitHosting::Error::InvalidSshKey => e
         errors.add(:key, :corrupted)
       end
@@ -217,6 +195,11 @@ class GitolitePublicKey < ActiveRecord::Base
     def key_correctness
       return false if key.nil?
       (key.match(/^(\S+)\s+(\S+)/)) && (fingerprint =~ /^(\w{2}:?)+$/i)
+    end
+
+
+    def key_not_admin
+      errors.add(:key, :taken_by_gitolite_admin) if fingerprint == RedmineGitHosting::Config.gitolite_ssh_public_key_fingerprint
     end
 
 

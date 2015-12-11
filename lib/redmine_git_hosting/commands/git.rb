@@ -1,21 +1,14 @@
-module RedmineGitHosting::Commands
+module RedmineGitHosting
+  module Commands
+    module Git
+      extend self
 
-  module Git
+      ############################
+      #                          #
+      #  Sudo+Git Shell Wrapper  #
+      #                          #
+      ############################
 
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    ############################
-    #                          #
-    #  Sudo+Git Shell Wrapper  #
-    #                          #
-    ############################
-
-    module ClassMethods
 
       # Send Git command with Sudo
       #
@@ -97,8 +90,15 @@ module RedmineGitHosting::Commands
       private
 
 
+        # Return the Git command with prepend args (mainly env vars like FOO=BAR git push).
+        #
+        def git(args = [])
+          [*args, Repository::Xitolite.scm_command]
+        end
+
+
         def git_args_for_repo(repo_path)
-          [ '--git-dir', repo_path ]
+          ['--git-dir', repo_path]
         end
 
 
@@ -127,6 +127,5 @@ module RedmineGitHosting::Commands
         end
 
     end
-
   end
 end

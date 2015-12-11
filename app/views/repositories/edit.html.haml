@@ -1,4 +1,12 @@
-%h2= l(:label_repository)
+.contextual
+  = render_repository_quick_jump(@repository)
+
+%h2
+  = link_to l(:label_settings), settings_project_path(@repository.project, tab: 'repositories')
+  »
+  = l(:label_repository)
+  »
+  = @repository.redmine_name
 
 .container
   .row

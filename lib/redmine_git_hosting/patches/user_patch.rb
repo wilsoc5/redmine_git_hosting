@@ -15,6 +15,9 @@ module RedmineGitHosting
           # Relations
           has_many :gitolite_public_keys, dependent: :destroy
 
+          has_many :protected_branches_members, dependent: :destroy, foreign_key: :principal_id
+          has_many :protected_branches, through: :protected_branches_members
+
           # Callbacks
           after_save :check_if_status_changed
         end
@@ -27,18 +30,25 @@ module RedmineGitHosting
         # As login names may change (i.e., user renamed), we use the user id
         # with its login name as a prefix for readibility.
         def gitolite_identifier
-          [RedmineGitHosting::Config.gitolite_identifier_prefix, login.underscore.gsub(/[^0-9a-zA-Z]/, '_'), '_', id].join
+          identifier = [RedmineGitHosting::Config.gitolite_identifier_prefix, stripped_login]
+          identifier.concat(['_', id]) if !RedmineGitHosting::Config.gitolite_identifier_strip_user_id?
+          identifier.join
         end
 
 
         def gitolite_projects
-          projects.uniq.select{ |p| p.gitolite_repos.any? }
+          projects.uniq.select { |p| p.gitolite_repos.any? }
         end
 
 
         # Syntaxic sugar
         def status_has_changed?
           status_has_changed
+        end
+
+
+        def allowed_to_manage_repository?(repository)
+          !roles_for_project(repository.project).select { |role| role.allowed_to?(:manage_repository) }.empty?
         end
 
 
@@ -84,6 +94,11 @@ module RedmineGitHosting
             else
               self.status_has_changed = false
             end
+          end
+
+
+          def stripped_login
+            login.underscore.gsub(/[^0-9a-zA-Z]/, '_')
           end
 
       end

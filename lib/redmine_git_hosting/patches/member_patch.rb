@@ -6,6 +6,7 @@ module RedmineGitHosting
 
       def self.included(base)
         base.send(:include, InstanceMethods)
+        base.send(:include, RedmineGitHosting::GitoliteAccessor::Methods)
         base.class_eval do
           unloadable
 
@@ -13,13 +14,14 @@ module RedmineGitHosting
         end
       end
 
+
       module InstanceMethods
 
         private
 
           def update_project
             options = { message: "Membership changes on project '#{project}', update!" }
-            GitoliteAccessor.update_projects([project.id], options)
+            gitolite_accessor.update_projects([project.id], options)
           end
 
       end

@@ -4,12 +4,8 @@ module RedmineGitHosting
 
       private
 
-        def logger
-          RedmineGitHosting.logger
-        end
-
-
         # Return a hash with global config parameters.
+        #
         def get_git_config_params(namespace)
           RedmineGitHosting::Commands.sudo_get_git_global_params(namespace)
         end

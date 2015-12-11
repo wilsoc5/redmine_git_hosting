@@ -1,48 +1,40 @@
-module RedmineGitHosting::Config
-
-  module GitoliteAccess
-
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    module ClassMethods
+module RedmineGitHosting
+  module Config
+    module GitoliteAccess
+      extend self
 
       def gitolite_http_by_default?
-        RedmineGitHosting::Config.get_setting(:gitolite_http_by_default)
+        get_setting(:gitolite_http_by_default)
       end
 
 
       def gitolite_daemon_by_default?
-        RedmineGitHosting::Config.get_setting(:gitolite_daemon_by_default, true)
+        get_setting(:gitolite_daemon_by_default, true)
       end
 
 
       def gitolite_notify_by_default?
-        RedmineGitHosting::Config.get_setting(:gitolite_notify_by_default, true)
+        get_setting(:gitolite_notify_by_default, true)
       end
 
 
       def ssh_server_domain
-        RedmineGitHosting::Config.get_setting(:ssh_server_domain)
+        get_setting(:ssh_server_domain)
       end
 
 
       def http_server_domain
-        RedmineGitHosting::Config.get_setting(:http_server_domain)
+        get_setting(:http_server_domain)
       end
 
 
       def https_server_domain
-        RedmineGitHosting::Config.get_setting(:https_server_domain)
+        get_setting(:https_server_domain)
       end
 
 
       def http_server_subdir
-        RedmineGitHosting::Config.get_setting(:http_server_subdir)
+        get_setting(:http_server_subdir)
       end
 
 
@@ -74,6 +66,5 @@ module RedmineGitHosting::Config
       end
 
     end
-
   end
 end

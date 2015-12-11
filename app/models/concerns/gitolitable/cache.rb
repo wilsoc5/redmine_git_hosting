@@ -5,7 +5,8 @@ module Gitolitable
     included do
       class << self
 
-        # Repo ident unique
+        # Are repositories identifier unique?
+        #
         def repo_ident_unique?
           RedmineGitHosting::Config.unique_repo_identifier?
         end
@@ -35,22 +36,28 @@ module Gitolitable
         # Example of data captured by regex :
         # <MatchData "test/test2/test3/test4/test5.git" 1:"test4/" 2:"test4" 3:"test5" 4:".git">
         # <MatchData "blabla2.git" 1:nil 2:nil 3:"blabla2" 4:".git">
-
+        #
         def find_by_path(path, flags = {})
-          if parseit = path.match(/^.*?(([^\/]+)\/)?([^\/]+?)(\.git)?$/)
-            if proj = Project.find_by_identifier(parseit[3])
-              # return default or first repo with blank identifier (or first Git repo--very rare?)
-              proj && (proj.repository || proj.repo_blank_ident || proj.gitolite_repos.first)
-            elsif repo_ident_unique? || flags[:loose] && parseit[2].nil?
+          parseit = path.match(/\A.*?(([^\/]+)\/)?([^\/]+?)(\.git)?\z/)
+          return nil if parseit.nil?
+
+          project = Project.find_by_identifier(parseit[3])
+
+          # return default or first repo with blank identifier (or first Git repo--very rare?)
+          if project
+            project.repository || project.repo_blank_ident || project.gitolite_repos.first
+
+          elsif repo_ident_unique? || flags[:loose] && parseit[2].nil?
+            find_by_identifier(parseit[3])
+
+          elsif parseit[2]
+            project = Project.find_by_identifier(parseit[2])
+
+            if project.nil?
               find_by_identifier(parseit[3])
-            elsif parseit[2] && proj = Project.find_by_identifier(parseit[2])
-              find_by_identifier_and_project_id(parseit[3], proj.id) ||
-              flags[:loose] && find_by_identifier(parseit[3]) || nil
             else
-              find_by_identifier(parseit[3]) || nil
+              find_by_identifier_and_project_id(parseit[3], project.id) || (flags[:loose] && find_by_identifier(parseit[3]))
             end
-          else
-            nil
           end
         end
 
@@ -58,8 +65,8 @@ module Gitolitable
     end
 
 
-    # If repo identifiers unique, identifier forms unique label
-    # Else, use directory notation: <project identifier>/<repo identifier>
+    # If repositories identifiers are unique, identifier forms a unique label,
+    # else use directory notation: <project identifier>/<repo identifier>
     #
     def git_cache_id
       if identifier.blank?
@@ -73,7 +80,7 @@ module Gitolitable
     end
 
 
-    # Note: RedmineGitHosting::Cache doesn't know about repository object, it only knows git_cache_id.
+    # Note: RedmineGitHosting::Cache doesn't know about repository object, it only knows *git_cache_id*.
     #
     def empty_cache!
       RedmineGitHosting::Cache.clear_cache_for_repository(git_cache_id)

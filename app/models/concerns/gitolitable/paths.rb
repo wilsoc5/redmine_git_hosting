@@ -2,12 +2,6 @@ module Gitolitable
   module Paths
     extend ActiveSupport::Concern
 
-    # This is the (possibly non-unique) basename for the Gitolite repository
-    #
-    def redmine_name
-      identifier.blank? ? project.identifier : identifier
-    end
-
 
     # This is the repository path from Redmine point of view.
     # It is used to build HTTP(s) urls (including GoLang url).
@@ -49,6 +43,14 @@ module Gitolitable
     #
     def gitolite_repository_path
       File.join(RedmineGitHosting::Config.gitolite_global_storage_dir, gitolite_repository_name_with_extension)
+    end
+
+
+    # This is the full absolute path to the Gitolite repository.
+    # Example : /home/git/repositories/redmine/blabla/test-blabla/uuuuuuuuuuu/oooooo.git
+    #
+    def gitolite_full_repository_path
+      File.join(RedmineGitHosting::Config.gitolite_home_dir, gitolite_repository_path)
     end
 
 

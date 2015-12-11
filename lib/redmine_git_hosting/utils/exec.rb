@@ -1,16 +1,9 @@
 require 'open3'
 
-module RedmineGitHosting::Utils
-  module Exec
-
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    module ClassMethods
+module RedmineGitHosting
+  module Utils
+    module Exec
+      extend self
 
       # Executes the given command and a list of parameters on the shell
       # and returns the result.
@@ -18,7 +11,7 @@ module RedmineGitHosting::Utils
       # If the operation throws an exception or the operation yields a non-zero exit code
       # we rethrow a +GitoliteCommandException+ with a meaningful error message.
       def capture(command, args = [], opts = {}, &block)
-        merge_output = opts.delete(:merge_output){ false }
+        merge_output = opts.delete(:merge_output) { false }
         stdout, stderr, code = execute(command, args, opts, &block)
         if code != 0
           error_msg = "Non-zero exit code #{code} for `#{command} #{args.join(" ")}`"
@@ -44,6 +37,5 @@ module RedmineGitHosting::Utils
       end
 
     end
-
   end
 end

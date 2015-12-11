@@ -25,7 +25,7 @@ module GitolitePluginSettingsHelper
       'true.png'
     when 1, false
       'exclamation.png'
-    when 2
+    else
       'warning.png'
     end
   end
@@ -80,22 +80,34 @@ module GitolitePluginSettingsHelper
   end
 
 
-  def git_cache_adapters
-    [
-      ['Database', 'database'],
-      ['Memcached', 'memcached'],
-      ['Redis', 'redis']
-    ]
+  def log_level_options
+    RedmineGitHosting::Logger::LOG_LEVELS.map { |level| [l("label_#{level}"), level] }
   end
 
 
-  def log_level_options
-    [
-      [l(:label_debug), 'debug'],
-      [l(:label_info), 'info'],
-      [l(:label_warn), 'warn'],
-      [l(:label_error), 'error']
-    ]
+  def render_rugged_mandatory_features
+    content = ''
+    RedmineGitHosting::Config.rugged_mandatory_features.each do |feature|
+      if RedmineGitHosting::Config.rugged_features.include?(feature)
+        opts = { class: 'label label-success' }
+      else
+        opts = { class: 'label label-important' }
+      end
+      content << content_tag(:span, feature, opts) + "\n"
+    end
+    content.html_safe
+  end
+
+
+  def render_rugged_optional_features
+    content = ''
+    RedmineGitHosting::Config.rugged_features.each do |feature|
+      if !RedmineGitHosting::Config.rugged_mandatory_features.include?(feature)
+        opts = { class: 'label label-success' }
+        content << content_tag(:span, feature, opts)
+      end
+    end
+    content.html_safe
   end
 
 end

@@ -35,12 +35,9 @@ module Grack
 
           # Authentication with username and password
           login, password = @auth.credentials
-
           @user = authenticate_user(login, password)
 
-          if @user
-            @env['REMOTE_USER'] = @auth.username
-          end
+          @env['REMOTE_USER'] = @user.gitolite_identifier if @user
         end
 
         if authorized_request?
@@ -130,7 +127,7 @@ module Grack
 
 
       def render_not_found
-        [404, {'Content-Type' => 'text/plain'}, ['Not Found']]
+        [404, { 'Content-Type' => 'text/plain' }, ['Not Found']]
       end
 
 

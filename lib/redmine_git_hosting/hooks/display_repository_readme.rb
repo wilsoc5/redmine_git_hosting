@@ -34,7 +34,8 @@ module RedmineGitHosting
 
 
         def get_rev(context)
-          (_rev = context[:request].params['rev']).blank? ? nil : _rev
+          _rev = context[:request].params['rev']
+          _rev.blank? ? nil : _rev
         end
 
 
@@ -44,7 +45,7 @@ module RedmineGitHosting
 
 
         def find_repository(context, repo_id)
-          blk = repo_id ? lambda { |r| r.identifier == repo_id } : lambda { |r| r.is_default }
+          blk = repo_id ? ->(r) { r.identifier == repo_id } : ->(r) { r.is_default }
           context[:project].repositories.find(&blk)
         end
 
@@ -55,7 +56,7 @@ module RedmineGitHosting
 
 
         def get_formatter(repository, readme_file, rev)
-          raw_readme_text = repository.cat(readme_file.path, rev)
+          raw_readme_text = Redmine::CodesetUtil.to_utf8_by_setting(repository.cat(readme_file.path, rev))
 
           if MARKDOWN_EXT.include?(File.extname(readme_file.path))
             formatter_name = Redmine::WikiFormatting.format_names.find { |name| name =~ /markdown/i }

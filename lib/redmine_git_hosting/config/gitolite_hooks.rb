@@ -1,15 +1,7 @@
-module RedmineGitHosting::Config
-
-  module GitoliteHooks
-
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    module ClassMethods
+module RedmineGitHosting
+  module Config
+    module GitoliteHooks
+      extend self
 
       def gitolite_hooks_namespace
         'redminegitolite'
@@ -17,27 +9,27 @@ module RedmineGitHosting::Config
 
 
       def gitolite_hooks_url
-        [RedmineGitHosting::Config.get_setting(:gitolite_hooks_url), '/githooks/post-receive/redmine'].join
+        [get_setting(:gitolite_hooks_url), '/githooks/post-receive/redmine'].join
       end
 
 
       def gitolite_hooks_debug
-        RedmineGitHosting::Config.get_setting(:gitolite_hooks_debug, true)
+        get_setting(:gitolite_hooks_debug, true)
       end
 
 
       def gitolite_hooks_are_asynchronous
-        RedmineGitHosting::Config.get_setting(:gitolite_hooks_are_asynchronous, true)
+        get_setting(:gitolite_hooks_are_asynchronous, true)
       end
 
 
       def gitolite_overwrite_existing_hooks?
-        RedmineGitHosting::Config.get_setting(:gitolite_overwrite_existing_hooks, true)
+        get_setting(:gitolite_overwrite_existing_hooks, true)
       end
 
 
       def gitolite_local_code_dir
-        RedmineGitHosting::Config.get_setting(:gitolite_local_code_dir)
+        get_setting(:gitolite_local_code_dir)
       end
 
 
@@ -73,6 +65,5 @@ module RedmineGitHosting::Config
       end
 
     end
-
   end
 end

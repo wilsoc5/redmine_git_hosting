@@ -5,6 +5,7 @@ PLUGIN ICONS
 
 .icon-git-logo { background-image: url('../images/git_icon.png'); padding-right: 5px; }
 .icon-clone { background-image: url('../images/clone.png'); }
+.icon-move { background-image: url('../images/move.png'); }
 
 .icon-git { padding-right: 15px; }
 .icon-git-disabled { opacity: 0.5; }
@@ -50,6 +51,12 @@ PLUGIN SETTINGS
 #settings p {
   margin-bottom: 15px;
   margin-top: 15px;
+}
+
+.authors-list {
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
 }
 
 
@@ -135,7 +142,7 @@ REPOSITORY SETTINGS
 /*
 MISC
 */
-.spacer { display: block; height: 10px; clear: both; }
+.git_hosting_spacer { display: block; height: 10px; clear: both; }
 
 td.buttons { width: 20%; }
 
@@ -255,4 +262,13 @@ STATISTICS
 /*PROJECT OVERVIEW*/
 .repository-urls {
   margin-top: 15px;
+}
+
+li.url_type {
+  margin: 10px;
+  padding: 5px;
+}
+
+.draggable {
+  cursor: move;
 }

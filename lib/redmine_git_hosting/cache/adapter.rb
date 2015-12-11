@@ -1,7 +1,7 @@
-module RedmineGitHosting::Cache
-  class Adapter
-
-    class << self
+module RedmineGitHosting
+  module Cache
+    module Adapter
+      extend self
 
       def factory
         case RedmineGitHosting::Config.gitolite_cache_adapter
@@ -11,10 +11,11 @@ module RedmineGitHosting::Cache
           Memcached.new
         when 'redis'
           Redis.new
+        else
+          Database.new
         end
       end
 
     end
-
   end
 end

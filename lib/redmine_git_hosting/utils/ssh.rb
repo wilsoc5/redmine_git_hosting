@@ -1,14 +1,7 @@
-module RedmineGitHosting::Utils
-  module Ssh
-
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
-
-
-    module ClassMethods
+module RedmineGitHosting
+  module Utils
+    module Ssh
+      extend self
 
       def ssh_fingerprint(key)
         file = Tempfile.new('keytest')
@@ -16,7 +9,7 @@ module RedmineGitHosting::Utils
         file.close
 
         begin
-          output = capture('ssh-keygen', ['-l', '-f', file.path])
+          output = Utils::Exec.capture('ssh-keygen', ['-l', '-f', file.path])
         rescue RedmineGitHosting::Error::GitoliteCommandException => e
           raise RedmineGitHosting::Error::InvalidSshKey.new("Invalid Ssh Key : #{key}")
         else
@@ -45,6 +38,5 @@ module RedmineGitHosting::Utils
       end
 
     end
-
   end
 end

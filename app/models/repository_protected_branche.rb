@@ -1,35 +1,26 @@
 class RepositoryProtectedBranche < ActiveRecord::Base
   unloadable
 
-  #VALID_PERMS  = ['RW+', 'RW']
   VALID_PERMS  = ['RW+', 'RW', 'R', '-']
   DEFAULT_PERM = 'RW+'
 
   acts_as_list
 
   ## Attributes
-  attr_accessible :path, :permissions, :position, :user_list
+  attr_accessible :path, :permissions, :position
 
   ## Relations
   belongs_to :repository
+  has_many   :protected_branches_members, foreign_key: :protected_branch_id, dependent: :destroy
+  has_many   :members, through: :protected_branches_members, source: :principal
 
   ## Validations
   validates :repository_id, presence: true
   validates :path,          presence: true, uniqueness: { scope: [:permissions, :repository_id] }
   validates :permissions,   presence: true, inclusion: { in: VALID_PERMS }
-  validates :user_list,     presence: true
-
-  ## Serializations
-  serialize :user_list, Array
-
-  ## Callbacks
-  before_validation :remove_blank_items
 
   ## Scopes
   default_scope { order('position ASC') }
-
-  ## Delegation
-  delegate :project, to: :repository
 
 
   class << self
@@ -45,21 +36,20 @@ class RepositoryProtectedBranche < ActiveRecord::Base
   end
 
 
-  def available_users
-    project.member_principals.map(&:user).compact.uniq.map{ |u| u.login }.sort
+  # Accessors
+  #
+  def users
+    members.select { |m| m.class.name == 'User' }.uniq
+  end
+
+
+  def groups
+    members.select { |m| m.class.name == 'Group' }.uniq
   end
 
 
   def allowed_users
-    user_list.map{|u| User.find_by_login(u).gitolite_identifier}.sort
+    users.map { |u| u.gitolite_identifier }.sort
   end
-
-
-  private
-
-
-    def remove_blank_items
-      self.user_list = user_list.select{|u| !u.blank?} rescue []
-    end
 
 end

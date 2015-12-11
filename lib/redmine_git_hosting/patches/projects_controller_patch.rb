@@ -6,6 +6,7 @@ module RedmineGitHosting
 
       def self.included(base)
         base.send(:include, InstanceMethods)
+        base.send(:include, RedmineGitHosting::GitoliteAccessor::Methods)
         base.class_eval do
           unloadable
 
@@ -96,7 +97,7 @@ module RedmineGitHosting
           def create_project_repository
             if @project.module_enabled?('repository') && RedmineGitHosting::Config.all_projects_use_git?
               if Setting.enabled_scm.include?('Xitolite')
-                CreateProjectRepository.new(@project).call
+                Projects::CreateRepository.call(@project)
               else
                 flash[:error] = l(:error_xitolite_repositories_disabled)
               end
@@ -105,31 +106,31 @@ module RedmineGitHosting
 
 
           def move_project_hierarchy
-            GitoliteAccessor.move_project_hierarchy(@project)
+            gitolite_accessor.move_project_hierarchy(@project)
           end
 
 
           def update_project(message)
             options = { message: message }
-            UpdateProject.new(@project, options).call
+            Projects::Update.call(@project, options)
           end
 
 
           def update_project_hierarchy(message)
             options = { message: message }
-            GitoliteAccessor.update_projects(hierarchy_to_update, options)
+            gitolite_accessor.update_projects(hierarchy_to_update, options)
           end
 
 
           def hierarchy_to_update
             # Only take projects that have Git repos.
-            @project.self_and_descendants.uniq.select{ |p| p.gitolite_repos.any? }.map{ |project| project.id }
+            @project.self_and_descendants.uniq.select { |p| p.gitolite_repos.any? }.map { |project| project.id }
           end
 
 
           def destroy_repositories(repositories_list)
             options = { message: "User '#{User.current.login}' has destroyed project '#{@project}', delete all Gitolite repositories !" }
-            GitoliteAccessor.destroy_repositories(repositories_list, options)
+            gitolite_accessor.destroy_repositories(repositories_list, options)
           end
 
 
@@ -140,7 +141,7 @@ module RedmineGitHosting
             projects = @project.self_and_descendants
 
             # Only take projects that have Git repos.
-            git_projects = projects.uniq.select{ |p| p.gitolite_repos.any? }
+            git_projects = projects.uniq.select { |p| p.gitolite_repos.any? }
 
             git_projects.reverse.each do |project|
               project.gitolite_repos.reverse.each do |repository|

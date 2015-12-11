@@ -4,7 +4,7 @@ module ExtendRepositoriesHelper
     content_tag(:p) do
       form.select(
         :path_encoding, [nil] + Setting::ENCODINGS,
-        :label => l(:field_scm_path_encoding)
+        label: l(:field_scm_path_encoding)
       ) + '<br />'.html_safe + l(:text_scm_path_encoding_note)
     end
   end
@@ -29,7 +29,35 @@ module ExtendRepositoriesHelper
 
 
   def repository_branches_list(branches)
-    options_for_select(branches.collect{ |b| [b.to_s, b.to_s] }, selected: branches.find{ |b| b.is_default}.to_s)
+    options_for_select branches.collect { |b| [b.to_s, b.to_s] }, selected: branches.find { |b| b.is_default }.to_s
   end
 
+
+  def render_repository_quick_jump(repository)
+    options = repository.project.repositories.map { |r| [r.redmine_name, edit_repository_path(r)] }
+    select_tag('repository_quick_jump_box', options_for_select(options, selected: edit_repository_path(repository)), onchange: 'if (this.value != \'\') { window.location = this.value; }')
+  end
+
+
+  def link_to_repository(repo, current_repo)
+    css_class = ['repository', (repo == current_repo ? 'selected' : ''), current_repo.type.split('::')[1].downcase].join(' ')
+    link_to h(repo.name), { controller: 'repositories', action: 'show', id: @project, repository_id: repo.identifier_param, rev: nil, path: nil },
+                          class: css_class
+  end
+
+
+  def icon_for_url_type(url_type)
+    fa_icon RepositoryGitExtra::URLS_ICONS[url_type][:icon]
+  end
+
+
+  def label_for_url_type(url_type)
+    RepositoryGitExtra::URLS_ICONS[url_type][:label]
+  end
+
+
+  def render_options_for_move_repo_select_box(project)
+    projects = Project.active
+    project_tree_options_for_select(projects, selected: project) if projects.any?
+  end
 end

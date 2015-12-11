@@ -1,28 +1,32 @@
-require 'simplecov'
-require 'simplecov-rcov'
-require 'coveralls'
-require 'codeclimate-test-reporter'
+unless ENV['DISABLE_COVERAGE'] == 'true'
+  require 'simplecov'
+  require 'simplecov-rcov'
+  require 'coveralls'
+  require 'codeclimate-test-reporter'
 
-## Configure SimpleCov
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
-  SimpleCov::Formatter::HTMLFormatter,
-  SimpleCov::Formatter::RcovFormatter
-  # Coveralls::SimpleCov::Formatter,
-  # CodeClimate::TestReporter::Formatter
-]
+  ## Configure SimpleCov
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::RcovFormatter
+    # Coveralls::SimpleCov::Formatter,
+    # CodeClimate::TestReporter::Formatter
+  ]
 
-## Start Simplecov
-SimpleCov.start 'rails' do
-  add_group 'Redmine Git Hosting', 'plugins/redmine_git_hosting'
+  ## Start Simplecov
+  SimpleCov.start 'rails' do
+    add_group 'Redmine Git Hosting', 'plugins/redmine_git_hosting'
+  end
 end
 
 ## Load Redmine App
-ENV["RAILS_ENV"] = 'test'
+ENV['RAILS_ENV'] = 'test'
 require File.expand_path(File.dirname(__FILE__) + '/../config/environment')
 require 'rspec/rails'
 
 ## Load FactoryGirls factories
-Dir[Rails.root.join("plugins/*/spec/factories/**/*.rb")].each { |f| require f }
+Dir[Rails.root.join('plugins/*/spec/factories/**/*.rb')].each { |f| require f }
+
+Dir[Rails.root.join('plugins/*/spec/support/**/*.rb')].each { |f| require f }
 
 ## Configure RSpec
 RSpec.configure do |config|
@@ -53,3 +57,6 @@ RSpec.configure do |config|
     DatabaseCleaner.clean
   end
 end
+
+# Disable Test::Unit automatic runner
+Test::Unit::AutoRunner.need_auto_run = false if defined?(Test::Unit::AutoRunner)

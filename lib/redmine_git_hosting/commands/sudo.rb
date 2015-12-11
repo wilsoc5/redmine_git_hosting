@@ -1,24 +1,20 @@
-module RedmineGitHosting::Commands
+require 'digest/md5'
 
-  module Sudo
+module RedmineGitHosting
+  module Commands
+    module Sudo
+      extend self
 
-    class << self
-      def included(receiver)
-        receiver.send(:extend, ClassMethods)
-      end
-    end
+      ##########################
+      #                        #
+      #   SUDO Shell Wrapper   #
+      #                        #
+      ##########################
 
-
-    ##########################
-    #                        #
-    #   SUDO Shell Wrapper   #
-    #                        #
-    ##########################
-
-    module ClassMethods
 
       # Pipe file content via sudo to dest_file.
       # Expect file content to end with EOL (\n)
+      #
       def sudo_install_file(content, dest_file, filemode)
         stdin = [ 'cat', '<<\EOF', '>' + dest_file, "\n" + content.to_s + "EOF" ].join(' ')
 
@@ -40,12 +36,14 @@ module RedmineGitHosting::Commands
 
 
       # Test if a file exists with size > 0
+      #
       def sudo_file_exists?(filename)
         sudo_test(filename, '-s')
       end
 
 
       # Test if a directory exists
+      #
       def sudo_dir_exists?(dirname)
         sudo_test(dirname, '-r')
       end
@@ -54,6 +52,7 @@ module RedmineGitHosting::Commands
       # Test properties of a path from the git user.
       #
       # e.g., Test if a directory exists: sudo_test('~/somedir', '-d')
+      #
       def sudo_test(path, testarg)
         _, _ , code = sudo_shell('test', testarg, path)
         return code == 0
@@ -73,6 +72,7 @@ module RedmineGitHosting::Commands
 
 
       # Syntaxic sugar for 'mkdir -p'
+      #
       def sudo_mkdir_p(path)
         sudo_mkdir('-p', path)
       end
@@ -122,13 +122,88 @@ module RedmineGitHosting::Commands
       end
 
 
+      def sudo_cat(file)
+        sudo_capture('cat', file) rescue ''
+      end
+
+
       # Test if file content has changed
       #
       def sudo_file_changed?(source_file, dest_file)
-        hash_content(local_content(source_file)) != hash_content(distant_content(dest_file))
+        hash_content(content_from_redmine_side(source_file)) != hash_content(content_from_gitolite_side(dest_file))
       end
 
-    end
 
+      # Return only the output of the shell command.
+      # Throws an exception if the shell command does not exit with code 0.
+      #
+      def sudo_capture(*params)
+        cmd = sudo.concat(params)
+        capture(cmd)
+      end
+
+
+      # Execute a command as the gitolite user defined in +GitoliteWrapper.gitolite_user+.
+      #
+      # Will shell out to +sudo -n -u <gitolite_user> params+
+      #
+      def sudo_shell(*params)
+        cmd = sudo.concat(params)
+        execute(cmd)
+      end
+
+
+      # Write data on stdin and return the output of the shell command.
+      # Throws an exception if the shell command does not exit with code 0.
+      #
+      def sudo_pipe_data(stdin)
+        cmd = sudo.push('sh')
+        capture(cmd, { stdin_data: stdin, binmode: true })
+      end
+
+
+      private
+
+
+        # Return the Sudo command with basic args.
+        #
+        def sudo
+          ['sudo', *sudo_shell_params]
+        end
+
+
+        # Returns the sudo prefix to all sudo_* commands.
+        #
+        # These are as follows:
+        # * (-i) login as `gitolite_user` (setting ENV['HOME')
+        # * (-n) non-interactive
+        # * (-u `gitolite_user`) target user
+        #
+        def sudo_shell_params
+          ['-n', '-u', RedmineGitHosting::Config.gitolite_user, '-i']
+        end
+
+
+        # Return a md5 hash of the string passed.
+        #
+        def hash_content(content)
+          Digest::MD5.hexdigest(content)
+        end
+
+
+        # Return the content of a local (Redmine side) file.
+        #
+        def content_from_redmine_side(file)
+          File.read(file)
+        end
+
+
+        # Return the content of a file on Gitolite side.
+        #
+        def content_from_gitolite_side(destination_path)
+          sudo_cat(destination_path)
+        end
+
+    end
   end
 end

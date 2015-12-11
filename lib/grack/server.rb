@@ -1,7 +1,6 @@
 module Grack
   class Server
 
-    #
     # Override original *service_rpc* method to fix compatibility with Ruby 1.9.3 IO.popen.
     #
     # Between Ruby 1.9 and Ruby 2.0 the method signature has changed :
@@ -27,9 +26,9 @@ module Grack
 
         @res = Rack::Response.new
         @res.status = 200
-        @res["Content-Type"] = "application/x-git-%s-result" % @rpc
-        @res["Transfer-Encoding"] = "chunked"
-        @res["Cache-Control"] = "no-cache"
+        @res['Content-Type']      = "application/x-git-#{@rpc}-result"
+        @res['Transfer-Encoding'] = 'chunked'
+        @res['Cache-Control']     = 'no-cache'
 
         @res.finish do
           command = git_command(%W(#{@rpc} --stateless-rpc #{@dir}))
@@ -47,7 +46,6 @@ module Grack
     end
 
 
-    #
     # Override original *get_git_dir* method because the path is relative
     # and accessed via Sudo.
     #
@@ -61,7 +59,6 @@ module Grack
     end
 
 
-    #
     # Override original *git_command* method to prefix the command with Sudo and other args.
     #
     def git_command(params)
@@ -69,7 +66,6 @@ module Grack
     end
 
 
-    #
     # Override original *capture* method because the original IO.popen().read let zombie process behind.
     #
     # This method is called :
@@ -88,14 +84,13 @@ module Grack
       args = command
 
       begin
-        RedmineGitHosting::Utils.capture(cmd, args)
+        RedmineGitHosting::Utils::Exec.capture(cmd, args)
       rescue => e
         logger.error('Problems while getting SmartHttp params')
       end
     end
 
 
-    #
     # Override original *popen_options* method.
     # The original one try to chdir before executing the command by
     # passing 'chdir: @dir' option to IO.popen.
@@ -156,12 +151,22 @@ module Grack
 
 
       def smart_http_args
-        ['env', 'GL_BYPASS_UPDATE_HOOK=true']
+        [
+          'env',
+          "GL_LIBDIR=#{RedmineGitHosting::Config.gitolite_lib_dir_path}",
+          "GL_REPO=#{repository_object.gitolite_repository_name}",
+          "GL_USER=#{@env['REMOTE_USER']}"
+        ]
       end
 
 
       def logger
         RedmineGitHosting.logger
+      end
+
+
+      def repository_object
+        @repo ||= Repository::Xitolite.find_by_path(@dir, loose: true)
       end
 
   end
