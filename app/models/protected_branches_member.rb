@@ -3,6 +3,7 @@ class ProtectedBranchesMember < ActiveRecord::Base
   ## Relations
   belongs_to :protected_branch, class_name: 'RepositoryProtectedBranche'
   belongs_to :principal
+  attr_accessible :principal_id, :inherited_by
 
   ## Callbacks
   after_destroy :remove_dependent_objects
